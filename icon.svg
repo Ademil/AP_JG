@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0D1B2A"/>
+      <stop offset="1" stop-color="#1B263B"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#64B5F6"/>
+      <stop offset="0.6" stop-color="#1565C0"/>
+      <stop offset="1" stop-color="#F5A623"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- Bloco 3D estilizado -->
+  <g transform="translate(256,300)">
+    <polygon points="0,-90 90,-45 0,0 -90,-45" fill="#4A90E2" opacity="0.9"/>
+    <polygon points="0,0 90,-45 90,45 0,90" fill="#1565C0"/>
+    <polygon points="0,0 -90,-45 -90,45 0,90" fill="#0D47A1"/>
+    <!-- studs -->
+    <ellipse cx="-30" cy="-72" rx="14" ry="7" fill="#64B5F6" opacity="0.55"/>
+    <ellipse cx="30" cy="-72" rx="14" ry="7" fill="#64B5F6" opacity="0.55"/>
+  </g>
+  <text x="256" y="140" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="88" font-weight="900" fill="url(#acc)">AP</text>
+  <text x="256" y="460" text-anchor="middle" font-family="Arial, sans-serif" font-size="46" font-weight="800" fill="#F5F7FA" letter-spacing="4">BUILD 3D</text>
+</svg>

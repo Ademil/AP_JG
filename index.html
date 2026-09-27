@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="theme-color" content="#0D1B2A" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="AP BUILD 3D" />
+<meta name="description" content="AP BUILD 3D - Monte. Construa. Desafie-se." />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<title>AP BUILD 3D</title>
+<style>
+:root{
+  --navy:#0D1B2A; --navy2:#1B263B; --navy3:#243B55;
+  --blue:#1565C0; --blue2:#4A90E2; --blue3:#64B5F6;
+  --accent:#F5A623; --danger:#E53935; --ok:#43A047;
+  --white:#F5F7FA; --gray:#8B9AA8;
+  --r:14px; --r2:20px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;width:100%;overflow:hidden;background:var(--navy);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--white);user-select:none;touch-action:none}
+#game{position:fixed;inset:0;display:block;width:100%;height:100%;touch-action:none}
+
+/* ===== HUD ===== */
+.hud{position:fixed;z-index:10;pointer-events:none}
+.hud *{pointer-events:auto}
+
+#hud-top{
+  top:calc(env(safe-area-inset-top,0px) + 8px);left:8px;right:8px;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+}
+.chip{
+  background:rgba(13,27,42,.78);backdrop-filter:blur(10px);
+  border:1px solid rgba(100,181,246,.18);border-radius:var(--r);
+  padding:8px 12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;
+  box-shadow:0 4px 18px rgba(0,0,0,.35)
+}
+.chip b{color:var(--blue3);font-weight:800}
+.chip.accent b{color:var(--accent)}
+
+#hud-bottom{
+  bottom:calc(env(safe-area-inset-bottom,0px) + 8px);
+  left:8px;right:8px;display:flex;flex-direction:column;gap:8px;
+}
+.ctrl-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.btn{
+  background:rgba(27,38,59,.88);backdrop-filter:blur(10px);
+  border:1px solid rgba(100,181,246,.22);border-radius:var(--r);
+  color:var(--white);font-size:16px;font-weight:700;
+  min-width:46px;height:46px;padding:0 12px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  cursor:pointer;transition:transform .12s,background .18s,border-color .18s;
+  box-shadow:0 4px 14px rgba(0,0,0,.3)
+}
+.btn:hover{background:rgba(36,59,85,.95);border-color:rgba(100,181,246,.5)}
+.btn:active{transform:scale(.94)}
+.btn.primary{background:linear-gradient(135deg,var(--blue),var(--blue2));border-color:transparent}
+.btn.accent{background:linear-gradient(135deg,#F5A623,#E58E00);border-color:transparent;color:#0D1B2A}
+.btn.wide{min-width:120px;height:52px;font-size:15px;padding:0 22px}
+.btn.icon{padding:0;width:46px}
+.btn svg{width:20px;height:20px;fill:currentColor}
+
+/* ===== TELAS ===== */
+.screen{
+  position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at top,rgba(21,101,192,.28),rgba(13,27,42,.96) 60%);
+  backdrop-filter:blur(14px);padding:20px;overflow-y:auto;
+  transition:opacity .25s;
+}
+.screen.hidden{display:none}
+.panel{
+  background:rgba(27,38,59,.92);border:1px solid rgba(100,181,246,.22);
+  border-radius:var(--r2);padding:24px;max-width:520px;width:100%;
+  box-shadow:0 24px 60px rgba(0,0,0,.6)
+}
+.logo{text-align:center;margin-bottom:18px}
+.logo h1{
+  font-size:clamp(28px,7vw,42px);font-weight:900;letter-spacing:2px;
+  background:linear-gradient(135deg,#64B5F6,#1565C0 60%,#F5A623);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  line-height:1.05
+}
+.logo p{font-size:13px;color:var(--gray);margin-top:6px;letter-spacing:3px;text-transform:uppercase}
+.logo .sub{color:var(--accent);font-size:12px;margin-top:8px;letter-spacing:1px}
+
+.menu-list{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.menu-list .btn{width:100%;height:54px;font-size:15px;justify-content:flex-start;padding:0 20px}
+
+.levels{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.level-card{
+  background:rgba(13,27,42,.7);border:1px solid rgba(100,181,246,.22);
+  border-radius:var(--r);padding:14px;cursor:pointer;transition:.2s;
+  display:flex;flex-direction:column;gap:4px
+}
+.level-card:hover{border-color:var(--blue2);transform:translateY(-2px)}
+.level-card .nm{font-weight:800;font-size:15px;color:var(--white)}
+.level-card .df{font-size:11px;color:var(--gray);letter-spacing:1px;text-transform:uppercase}
+.level-card .pc{font-size:12px;color:var(--blue3);font-weight:700;margin-top:4px}
+.level-card.locked{opacity:.45;pointer-events:none}
+
+.title-bar{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:14px;gap:12px
+}
+.title-bar h2{font-size:20px;font-weight:800}
+.hint{font-size:12px;color:var(--gray);line-height:1.5;margin-top:10px;text-align:center}
+
+.stats-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0
+}
+.stat{
+  background:rgba(13,27,42,.6);border-radius:var(--r);padding:12px;text-align:center
+}
+.stat .v{font-size:22px;font-weight:900;color:var(--blue3)}
+.stat .l{font-size:11px;color:var(--gray);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.stat.gold .v{color:var(--accent)}
+
+.medal{
+  text-align:center;font-size:52px;margin:8px 0;filter:drop-shadow(0 6px 14px rgba(245,166,35,.4))
+}
+
+/* Toast */
+#toast{
+  position:fixed;left:50%;top:16%;transform:translateX(-50%) translateY(-10px);
+  background:rgba(13,27,42,.95);border:1px solid rgba(100,181,246,.35);
+  padding:12px 20px;border-radius:var(--r);font-weight:700;font-size:14px;
+  z-index:100;opacity:0;transition:.3s;pointer-events:none;
+  box-shadow:0 10px 30px rgba(0,0,0,.5)
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:var(--ok)}
+#toast.err{border-color:var(--danger)}
+
+/* Barra de progresso */
+#progress-bar{
+  position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--blue),var(--accent));
+  z-index:200;transition:width .3s;width:0%
+}
+
+/* Loading */
+#loading{
+  position:fixed;inset:0;background:var(--navy);z-index:300;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px
+}
+#loading .spinner{
+  width:44px;height:44px;border:3px solid rgba(100,181,246,.2);
+  border-top-color:var(--blue2);border-radius:50%;animation:spin .8s linear infinite
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Tutorial */
+.tut-step{background:rgba(13,27,42,.6);border-radius:var(--r);padding:14px;margin-bottom:8px;border-left:3px solid var(--blue2)}
+.tut-step h4{font-size:14px;color:var(--blue3);margin-bottom:4px}
+.tut-step p{font-size:13px;color:var(--white);line-height:1.5}
+
+@media(min-width:720px){
+  .btn.icon{width:52px;height:52px}
+  .ctrl-row{gap:10px}
+}
+@media(max-width:400px){
+  .chip{font-size:11px;padding:6px 9px}
+  .btn{min-width:42px;height:42px;font-size:15px}
+}
+</style>
+<script type="importmap">
+{
+  "imports":{
+    "three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<div id="loading"><div class="spinner"></div><div style="font-weight:800;letter-spacing:2px">AP BUILD 3D</div></div>
+
+<canvas id="game"></canvas>
+
+<!-- ===== HUD TOPO ===== -->
+<div id="hud-top" class="hud hidden">
+  <div class="chip" id="chip-pieces">🧱 <b><span id="ui-placed">0</span>/<span id="ui-total">0</span></b></div>
+  <div class="chip accent" id="chip-time">⏱ <b id="ui-time">00:00</b></div>
+  <div class="chip" id="chip-score">⭐ <b id="ui-score">0</b></div>
+</div>
+
+<!-- ===== HUD BAIXO ===== -->
+<div id="hud-bottom" class="hud hidden">
+  <div class="ctrl-row">
+    <button class="btn icon" id="btn-rotate" title="Rotacionar (R)">↻</button>
+    <button class="btn icon" id="btn-up" title="Subir">⬆</button>
+    <button class="btn icon" id="btn-down" title="Descer">⬇</button>
+    <button class="btn icon" id="btn-remove" title="Remover peça">🗑</button>
+    <button class="btn icon" id="btn-guide" title="Modo guia">💡</button>
+    <button class="btn icon" id="btn-center" title="Centralizar">⌖</button>
+    <button class="btn icon" id="btn-iso" title="Vista isométrica">◈</button>
+    <button class="btn icon" id="btn-menu" title="Menu">☰</button>
+  </div>
+</div>
+
+<!-- ===== MENU PRINCIPAL ===== -->
+<div id="screen-menu" class="screen">
+  <div class="panel">
+    <div class="logo">
+      <h1>AP BUILD 3D</h1>
+      <p>Monte · Construa · Desafie-se</p>
+      <div class="sub">APAVAN ENGENHARIA E CONSULTORIA</div>
+    </div>
+    <div class="menu-list">
+      <button class="btn primary wide" id="m-play">▶ JOGAR DESAFIO</button>
+      <button class="btn wide" id="m-free">🧱 CONSTRUIR LIVREMENTE</button>
+      <button class="btn wide" id="m-projects">💾 MEUS PROJETOS</button>
+      <button class="btn wide" id="m-tutorial">📘 TUTORIAL</button>
+      <button class="btn wide" id="m-settings">⚙ CONFIGURAÇÕES</button>
+    </div>
+    <div class="hint">Toque e arraste para mover peças · Dois dedos para orbitar · Pinça para zoom</div>
+  </div>
+</div>
+
+<!-- ===== SELEÇÃO DE NÍVEIS ===== -->
+<div id="screen-levels" class="screen hidden">
+  <div class="panel">
+    <div class="title-bar">
+      <h2>Escolha o Desafio</h2>
+      <button class="btn icon" id="lv-back">←</button>
+    </div>
+    <div class="levels" id="levels-grid"></div>
+    <div class="hint">Complete o modelo para liberar o próximo nível.</div>
+  </div>
+</div>
+
+<!-- ===== TUTORIAL ===== -->
+<div id="screen-tutorial" class="screen hidden">
+  <div class="panel">
+    <div class="title-bar">
+      <h2>Tutorial</h2>
+      <button class="btn icon" id="tu-back">←</button>
+    </div>
+    <div class="tut-step"><h4>1 · Escolha</h4><p>Toque em uma peça flutuante na bandeja.</p></div>
+    <div class="tut-step"><h4>2 · Arraste</h4><p>Arraste sobre a área de construção. A peça segue seu dedo/cursor.</p></div>
+    <div class="tut-step"><h4>3 · Aproxime</h4><p>Quando a peça estiver perto do encaixe correto, ela brilhará.</p></div>
+    <div class="tut-step"><h4>4 · Rotacione</h4><p>Use o botão ↻ ou a tecla R para girar a peça em 90°.</p></div>
+    <div class="tut-step"><h4>5 · Encaixe</h4><p>Solte a peça no lugar correto. Ela encaixa automaticamente com efeito magnético.</p></div>
+    <div class="tut-step"><h4>6 · Conclua</h4><p>Monte todas as peças para completar o modelo e receber sua pontuação!</p></div>
+  </div>
+</div>
+
+<!-- ===== CONFIGURAÇÕES ===== -->
+<div id="screen-settings" class="screen hidden">
+  <div class="panel">
+    <div class="title-bar">
+      <h2>Configurações</h2>
+      <button class="btn icon" id="st-back">←</button>
+    </div>
+    <div class="menu-list">
+      <button class="btn wide" id="st-sound">🔊 SOM: LIGADO</button>
+      <button class="btn wide" id="st-physics">⚛ FÍSICA: PUZZLE</button>
+      <button class="btn wide" id="st-ghost">👻 GUIAS: VISÍVEIS</button>
+      <button class="btn wide danger" id="st-reset">⚠ RESETAR PROGRESSO</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PROJETOS ===== -->
+<div id="screen-projects" class="screen hidden">
+  <div class="panel">
+    <div class="title-bar">
+      <h2>Meus Projetos</h2>
+      <button class="btn icon" id="pj-back">←</button>
+    </div>
+    <div class="menu-list">
+      <button class="btn primary wide" id="pj-new">➕ NOVO PROJETO</button>
+      <button class="btn wide" id="pj-load">📂 CARREGAR ÚLTIMO</button>
+      <button class="btn wide" id="pj-export">📤 EXPORTAR JSON</button>
+      <button class="btn wide" id="pj-import">📥 IMPORTAR JSON</button>
+    </div>
+    <div class="hint">No modo livre você pode escolher qualquer peça, cor, posição e rotação.</div>
+  </div>
+</div>
+
+<!-- ===== VITÓRIA ===== -->
+<div id="screen-complete" class="screen hidden">
+  <div class="panel">
+    <div class="medal" id="win-medal">🏆</div>
+    <h2 style="text-align:center;font-size:22px;margin-bottom:4px">MODELO CONCLUÍDO!</h2>
+    <p style="text-align:center;color:var(--gray);font-size:13px" id="win-name">—</p>
+    <div class="stats-grid">
+      <div class="stat"><div class="v" id="win-pieces">0</div><div class="l">Peças</div></div>
+      <div class="stat"><div class="v" id="win-time">00:00</div><div class="l">Tempo</div></div>
+      <div class="stat"><div class="v" id="win-acc">100%</div><div class="l">Precisão</div></div>
+      <div class="stat gold"><div class="v" id="win-score">0</div><div class="l">Pontuação</div></div>
+    </div>
+    <div class="menu-list">
+      <button class="btn primary wide" id="win-next">▶ PRÓXIMO DESAFIO</button>
+      <button class="btn wide" id="win-retry">↻ TENTAR NOVAMENTE</button>
+      <button class="btn wide" id="win-menu">☰ MENU PRINCIPAL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAUSA / GAME MENU ===== -->
+<div id="screen-pause" class="screen hidden">
+  <div class="panel">
+    <div class="logo"><h1 style="font-size:28px">PAUSADO</h1></div>
+    <div class="menu-list">
+      <button class="btn primary wide" id="pa-resume">▶ CONTINUAR</button>
+      <button class="btn wide" id="pa-restart">↻ REINICIAR NÍVEL</button>
+      <button class="btn wide" id="pa-levels">☷ TROCAR NÍVEL</button>
+      <button class="btn wide" id="pa-save">💾 SALVAR</button>
+      <button class="btn wide" id="pa-menu">☰ MENU PRINCIPAL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SELETOR DE PEÇA (MODO LIVRE) ===== -->
+<div id="screen-palette" class="screen hidden">
+  <div class="panel">
+    <div class="title-bar">
+      <h2>Escolher Peça</h2>
+      <button class="btn icon" id="pal-back">←</button>
+    </div>
+    <div id="palette-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
+    <div style="margin-top:14px">
+      <div style="font-size:12px;color:var(--gray);margin-bottom:8px;letter-spacing:1px">COR</div>
+      <div id="color-grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+// ==================================================================
+// AP BUILD 3D — Jogo de montagem 3D
+// Arquitetura: Game → Renderer, Camera, Pieces, SnapSystem,
+//              LevelManager, ScoreSystem, UI, Audio, SaveSystem
+// ==================================================================
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+// ============ CONSTANTES ============
+const GRID = 1;                  // 1 stud = 1 unidade
+const SUB = 0.4;                 // sub-layer (plate)
+const BRICK_H = 3;               // brick = 3 sub-layers
+const PLATE_H = 1;
+const STUD_R = 0.24;
+const STUD_H = 0.18;
+const SNAP_DIST = 1.9;
+const HOVER_Y = 5.5;
+const PALETTE_COLORS = [
+  '#1565C0','#E53935','#43A047','#F5A623','#8E24AA','#00ACC1',
+  '#FDD835','#FB8C00','#6D4C41','#455A64','#F5F0E1','#212121',
+  '#1976D2','#C62828','#2E7D32','#FFB300','#7B1FA2','#0097A7'
+];
+
+// ============ DEFINIÇÕES DE PEÇA ============
+// w = studs em X, d = studs em Z, h = sub-layers em Y
+const PIECE_DEFS = {
+  '1x1':{w:1,d:1,h:BRICK_H,label:'1×1'},
+  '1x2':{w:1,d:2,h:BRICK_H,label:'1×2'},
+  '1x3':{w:1,d:3,h:BRICK_H,label:'1×3'},
+  '1x4':{w:1,d:4,h:BRICK_H,label:'1×4'},
+  '2x2':{w:2,d:2,h:BRICK_H,label:'2×2'},
+  '2x3':{w:2,d:3,h:BRICK_H,label:'2×3'},
+  '2x4':{w:2,d:4,h:BRICK_H,label:'2×4'},
+  '2x6':{w:2,d:6,h:BRICK_H,label:'2×6'},
+  '1x2p':{w:1,d:2,h:PLATE_H,label:'PLACA 1×2'},
+  '2x2p':{w:2,d:2,h:PLATE_H,label:'PLACA 2×2'},
+  '2x4p':{w:2,d:4,h:PLATE_H,label:'PLACA 2×4'},
+};
+
+// ============ MODELOS / NÍVEIS ============
+const MODELS = {
+  torre:{
+    name:'Torre', level:1, difficulty:'Fácil', timeTarget:120,
+    pieces:[
+      {type:'2x2', color:'#1565C0', x:0,y:0, z:0, rot:0},
+      {type:'2x2', color:'#1976D2', x:0,y:3, z:0, rot:0},
+      {type:'2x2', color:'#1565C0', x:0,y:6, z:0, rot:0},
+      {type:'2x2', color:'#1976D2', x:0,y:9, z:0, rot:0},
+      {type:'1x2', color:'#F5A623', x:0,y:12,z:0, rot:90},
+      {type:'1x2', color:'#F5A623', x:0,y:12,z:1, rot:90},
+      {type:'1x1', color:'#E53935', x:0,y:15,z:0, rot:0},
+      {type:'1x1', color:'#E53935', x:1,y:15,z:0, rot:0},
+      {type:'1x1', color:'#E53935', x:0,y:15,z:1, rot:0},
+    ]
+  },
+  casa:{
+    name:'Casa', level:2, difficulty:'Médio', timeTarget:180,
+    pieces:[
+      {type:'2x4', color:'#8B7355', x:0,y:0, z:0, rot:0},
+      {type:'2x4', color:'#8B7355', x:2,y:0, z:0, rot:0},
+      {type:'1x4', color:'#F5F0E1', x:0,y:3, z:0, rot:90},
+      {type:'1x4', color:'#F5F0E1', x:0,y:3, z:3, rot:90},
+      {type:'1x2', color:'#F5F0E1', x:0,y:3, z:1, rot:0},
+      {type:'1x2', color:'#F5F0E1', x:3,y:3, z:1, rot:0},
+      {type:'1x4', color:'#F5F0E1', x:0,y:6, z:0, rot:90},
+      {type:'1x4', color:'#F5F0E1', x:0,y:6, z:3, rot:90},
+      {type:'1x2', color:'#F5F0E1', x:0,y:6, z:1, rot:0},
+      {type:'1x2', color:'#F5F0E1', x:3,y:6, z:1, rot:0},
+      {type:'2x4', color:'#B71C1C', x:0,y:9, z:0, rot:0},
+      {type:'2x4', color:'#B71C1C', x:2,y:9, z:0, rot:0},
+    ]
+  },
+  ponte:{
+    name:'Ponte', level:3, difficulty:'Difícil', timeTarget:300,
+    pieces:[
+      {type:'2x2', color:'#455A64', x:0,y:0, z:2, rot:0},
+      {type:'2x2', color:'#455A64', x:0,y:3, z:2, rot:0},
+      {type:'2x2', color:'#455A64', x:0,y:6, z:2, rot:0},
+      {type:'2x2', color:'#455A64', x:0,y:9, z:2, rot:0},
+      {type:'2x2', color:'#455A64', x:4,y:0, z:2, rot:0},
+      {type:'2x2', color:'#455A64', x:4,y:3, z:2, rot:0},
+      {type:'2x2', color:'#455A64', x:4,y:6, z:2, rot:0},
+      {type:'2x2', color:'#455A64', x:4,y:9, z:2, rot:0},
+      {type:'2x2', color:'#455A64', x:8,y:0, z:2, rot:0},
+      {type:'2x2', color:'#455A64', x:8,y:3, z:2, rot:0},
+      {type:'2x2', color:'#455A64', x:8,y:6, z:2, rot:0},
+      {type:'2x2', color:'#455A64', x:8,y:9, z:2, rot:0},
+      {type:'2x4', color:'#8D6E63', x:0,y:12,z:1, rot:0},
+      {type:'2x4', color:'#8D6E63', x:2,y:12,z:1, rot:0},
+      {type:'2x4', color:'#8D6E63', x:4,y:12,z:1, rot:0},
+      {type:'2x4', color:'#8D6E63', x:6,y:12,z:1, rot:0},
+      {type:'2x4', color:'#8D6E63', x:8,y:12,z:1, rot:0},
+    ]
+  },
+  edificio:{
+    name:'Edifício', level:4, difficulty:'Engenharia', timeTarget:420,
+    pieces:(()=>{
+      const a=[]; const wall=(y,c)=>a.push(
+        {type:'1x4', color:c, x:0,y,z:0,rot:90},
+        {type:'1x4', color:c, x:0,y,z:3,rot:90},
+        {type:'1x2', color:c, x:0,y,z:1,rot:0},
+        {type:'1x2', color:c, x:3,y,z:1,rot:0});
+      // piso
+      a.push({type:'2x4',color:'#616161',x:0,y:0,z:0,rot:0});
+      a.push({type:'2x4',color:'#616161',x:2,y:0,z:0,rot:0});
+      // 4 andares
+      wall(3,'#1565C0'); wall(6,'#4A90E2'); wall(9,'#1565C0'); wall(12,'#4A90E2');
+      // cobertura
+      a.push({type:'2x4',color:'#F5A623',x:0,y:15,z:0,rot:0});
+      a.push({type:'2x4',color:'#F5A623',x:2,y:15,z:0,rot:0});
+      // antena
+      a.push({type:'1x1',color:'#E53935',x:1,y:18,z:1,rot:0});
+      a.push({type:'1x1',color:'#E53935',x:1,y:21,z:1,rot:0});
+      return a;
+    })()
+  },
+  veiculo:{
+    name:'Veículo', level:5, difficulty:'Mestre', timeTarget:360,
+    pieces:[
+      // chassi
+      {type:'2x4', color:'#C62828', x:0,y:3, z:0, rot:0},
+      {type:'2x4', color:'#C62828', x:2,y:3, z:0, rot:0},
+      // rodas (blocos)
+      {type:'2x2', color:'#212121', x:0,y:0, z:0, rot:0},
+      {type:'2x2', color:'#212121', x:2,y:0, z:0, rot:0},
+      {type:'2x2', color:'#212121', x:0,y:0, z:2, rot:0},
+      {type:'2x2', color:'#212121', x:2,y:0, z:2, rot:0},
+      // capô/traseira
+      {type:'2x2', color:'#C62828', x:0,y:6, z:0, rot:0},
+      {type:'2x2', color:'#C62828', x:2,y:6, z:0, rot:0},
+      // teto
+      {type:'1x2', color:'#F5F0E1', x:1,y:9, z:1, rot:0},
+      {type:'1x2', color:'#F5F0E1', x:1,y:9, z:2, rot:0},
+      // detalhes
+      {type:'1x1', color:'#FDD835', x:0,y:9, z:0, rot:0},
+      {type:'1x1', color:'#FDD835', x:3,y:9, z:0, rot:0},
+    ]
+  }
+};
+const LEVEL_ORDER = ['torre','casa','ponte','edificio','veiculo'];
+
+// ============ ESTADO GLOBAL ============
+const state = {
+  screen:'menu',
+  mode:'puzzle',          // 'puzzle' | 'free'
+  levelKey:null,
+  model:null,
+  targets:[],             // {type,color,gx,gy,gz,rot,worldPos,w,d,filled,pieceId}
+  pieces:[],              // {mesh, def, targetId, placed, tray:{x,z}}
+  ghosts:[],
+  selected:null,
+  dragging:false,
+  dragPointerId:null,
+  dragStartWorld:new THREE.Vector3(),
+  score:0, combo:0, errors:0, placed:0, total:0,
+  startTime:0, elapsed:0, running:false,
+  soundOn:true, physicsMode:'puzzle', ghostVisible:true,
+  tutorialStep:0,
+  freeBuild:[],           // peças em modo livre
+};
+
+// ============ ÁUDIO (Web Audio API — sem assets) ============
+const Audio = (()=>{
+  let ctx=null;
+  function ensure(){ if(!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)(); return ctx; }
+  function beep(freq, dur=0.08, type='square', vol=0.06){
+    if(!state.soundOn) return;
+    try{
+      const c=ensure(); const o=c.createOscillator(); const g=c.createGain();
+      o.type=type; o.frequency.value=freq;
+      g.gain.setValueAtTime(vol,c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+dur);
+      o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime+dur);
+    }catch(e){}
+  }
+  function chord(freqs,dur=0.18){ freqs.forEach((f,i)=>setTimeout(()=>beep(f,dur,'sine',0.08),i*60)); }
+  return {
+    pick:()=>beep(680,0.05,'sine',0.05),
+    drop:()=>beep(320,0.06,'triangle',0.06),
+    snap:()=>{beep(880,0.05,'sine',0.07); setTimeout(()=>beep(1320,0.06,'sine',0.06),40)},
+    error:()=>{beep(180,0.12,'sawtooth',0.05)},
+    remove:()=>beep(240,0.08,'triangle',0.05),
+    win:()=>chord([523,659,784,1047]),
+    rotate:()=>beep(420,0.04,'square',0.04),
+    click:()=>beep(500,0.03,'sine',0.03)
+  };
+})();
+
+// ============ THREE.JS SETUP ============
+const canvas = document.getElementById('game');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#0D1B2A');
+scene.fog = new THREE.Fog('#0D1B2A', 40, 90);
+
+const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 300);
+camera.position.set(14, 16, 18);
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 5;
+controls.maxDistance = 80;
+controls.maxPolarAngle = Math.PI * 0.49;
+controls.target.set(3, 3, 3);
+controls.enablePan = true;
+controls.screenSpacePanning = true;
+controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+
+// ============ ILUMINAÇÃO ============
+const hemi = new THREE.HemisphereLight(0xC8E1FF, 0x1B263B, 0.85);
+scene.add(hemi);
+
+const key = new THREE.DirectionalLight(0xFFFFFF, 1.4);
+key.position.set(15, 25, 12);
+key.castShadow = true;
+key.shadow.mapSize.set(1024,1024);
+key.shadow.camera.left = -25; key.shadow.camera.right = 25;
+key.shadow.camera.top = 25; key.shadow.camera.bottom = -25;
+key.shadow.camera.near = 1; key.shadow.camera.far = 70;
+key.shadow.bias = -0.0005;
+scene.add(key);
+
+const fill = new THREE.DirectionalLight(0x64B5F6, 0.5);
+fill.position.set(-12, 10, -8);
+scene.add(fill);
+
+const rim = new THREE.DirectionalLight(0xF5A623, 0.35);
+rim.position.set(0, 8, -15);
+scene.add(rim);
+
+// ============ CENA BASE ============
+const groundGeo = new THREE.CircleGeometry(60, 64);
+const groundMat = new THREE.MeshStandardMaterial({color:'#132033', roughness:0.95, metalness:0.05});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI/2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// grade visual sutil
+const gridHelper = new THREE.GridHelper(60, 60, 0x4A90E2, 0x1B263B);
+gridHelper.material.opacity = 0.15;
+gridHelper.material.transparent = true;
+gridHelper.position.y = 0.01;
+scene.add(gridHelper);
+
+// plataforma de construção
+const buildBase = new THREE.Mesh(
+  new THREE.BoxGeometry(14, 0.3, 14),
+  new THREE.MeshStandardMaterial({color:'#1B263B', roughness:0.7, metalness:0.15})
+);
+buildBase.position.y = -0.15;
+buildBase.receiveShadow = true;
+scene.add(buildBase);
+
+const buildGroup = new THREE.Group(); scene.add(buildGroup);
+const ghostGroup = new THREE.Group(); scene.add(ghostGroup);
+const effectGroup = new THREE.Group(); scene.add(effectGroup);
+
+// ============ CACHE DE GEOMETRIA / MATERIAL ============
+const geoCache = new Map();
+const matCache = new Map();
+
+function pieceGeometry(type){
+  if(geoCache.has(type)) return geoCache.get(type);
+  const def = PIECE_DEFS[type];
+  const w = def.w*GRID*0.98;
+  const d = def.d*GRID*0.98;
+  const h = def.h*SUB;
+  const parts = [];
+
+  const box = new THREE.BoxGeometry(w,h,d);
+  box.translate(0,h/2,0);
+  parts.push(box.index?box.toNonIndexed():box);
+
+  // studs
+  const studBase = new THREE.CylinderGeometry(STUD_R,STUD_R,STUD_H,10);
+  for(let sx=0; sx<def.w; sx++){
+    for(let sz=0; sz<def.d; sz++){
+      const s = studBase.clone();
+      const px = (sx-(def.w-1)/2)*GRID;
+      const pz = (sz-(def.d-1)/2)*GRID;
+      s.translate(px, h+STUD_H/2, pz);
+      parts.push(s.index?s.toNonIndexed():s);
+    }
+  }
+  const merged = mergeGeometries(parts, false);
+  geoCache.set(type, merged);
+  return merged;
+}
+
+function pieceMaterial(color, opts={}){
+  const key = color + '|' + (opts.transparent?'t':'') + '|' + (opts.emissive||'');
+  if(matCache.has(key)) return matCache.get(key);
+  const m = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(color),
+    roughness: 0.42, metalness: 0.08,
+    transparent: !!opts.transparent,
+    opacity: opts.opacity ?? 1,
+    emissive: opts.emissive ? new THREE.Color(opts.emissive) : new THREE.Color(0x000000),
+    emissiveIntensity: opts.emissiveIntensity ?? 0
+  });
+  matCache.set(key, m);
+  return m;
+}
+
+// ============ FÁBRICA DE PEÇA ============
+function makePiece(type, color){
+  const geo = pieceGeometry(type);
+  const mat = pieceMaterial(color);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.userData.type = type;
+  mesh.userData.baseColor = color;
+  return mesh;
+}
+
+// ============ UTIL: posicionamento ============
+function rotatedDims(type, rot){
+  const def = PIECE_DEFS[type];
+  const r = ((rot%360)+360)%360;
+  if(r===90 || r===270) return {w:def.d, d:def.w};
+  return {w:def.w, d:def.d};
+}
+
+function targetWorldPos(t){
+  const {w,d} = rotatedDims(t.type, t.rot);
+  return new THREE.Vector3(
+    (t.gx + w/2)*GRID,
+     t.gy*SUB,
+    (t.gz + d/2)*GRID
+  );
+}
+
+// ============ CARREGAR NÍVEL ============
+function loadModel(key){
+  const model = MODELS[key];
+  if(!model){ toast('Modelo não encontrado','err'); return; }
+  state.levelKey = key;
+  state.model = model;
+  state.mode = 'puzzle';
+  state.targets = [];
+  state.pieces = [];
+  state.selected = null;
+  state.score = 0; state.combo = 0; state.errors = 0; state.placed = 0;
+  state.total = model.pieces.length;
+  state.startTime = performance.now();
+  state.elapsed = 0; state.running = true;
+
+  clearGroup(buildGroup);
+  clearGroup(ghostGroup);
+  clearGroup(effectGroup);
+  matCache.clear();
+
+  // bounding para centralizar a câmera e posicionar a bandeja
+  let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity,maxY=0;
+  const targets = model.pieces.map((p,i)=>{
+    const {w,d} = rotatedDims(p.type, p.rot);
+    const wp = new THREE.Vector3(
+      (p.x + w/2)*GRID,
+       p.y*SUB,
+      (p.z + d/2)*GRID
+    );
+    minX = Math.min(minX, p.x);
+    maxX = Math.max(maxX, p.x + w);
+    minZ = Math.min(minZ, p.z);
+    maxZ = Math.max(maxZ, p.z + d);
+    maxY = Math.max(maxY, p.y*SUB + PIECE_DEFS[p.type].h*SUB);
+    return {
+      type:p.type, color:p.color,
+      gx:p.x, gy:p.y, gz:p.z, rot:p.rot||0,
+      worldPos: wp, w, d,
+      filled:false, pieceId:i
+    };
+  });
+  state.targets = targets;
+
+  // centralizar câmera
+  const cx = (minX+maxX)/2, cz = (minZ+maxZ)/2;
+  const cy = maxY/2;
+  const size = Math.max(maxX-minX, maxZ-minZ, maxY) + 6;
+  controls.target.set(cx, cy, cz);
+  const dist = size * 1.9;
+  camera.position.set(cx + dist*0.55, cy + dist*0.75, cz + dist*0.9);
+  controls.update();
+
+  // Ghosts
+  targets.forEach(t=>{
+    const geo = pieceGeometry(t.type);
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(t.color),
+      transparent:true, opacity:0.16,
+      emissive:new THREE.Color(t.color), emissiveIntensity:0.35,
+      depthWrite:false, roughness:0.5
+    });
+    const g = new THREE.Mesh(geo, mat);
+    g.position.copy(t.worldPos);
+    g.rotation.y = THREE.MathUtils.degToRad(t.rot);
+    ghostGroup.add(g);
+    t.ghost = g;
+  });
+
+  // Tray: posiciona as peças de forma visível ao redor
+  // grid de 5 colunas, começando atrás da construção
+  const trayZ = maxZ + 4;
+  const trayStartX = -2;
+  const spacing = 3.2;
+  const cols = 5;
+  targets.forEach((t,i)=>{
+    const mesh = makePiece(t.type, t.color);
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const tx = trayStartX + col*spacing;
+    const tz = trayZ + row*3.5;
+    mesh.position.set(tx, 0.2, tz);
+    // leve rotação decorativa
+    mesh.rotation.y = THREE.MathUtils.degToRad(t.rot);
+    mesh.userData.tray = {x:tx, z:tz};
+    mesh.userData.targetId = i;
+    mesh.userData.rot = t.rot;
+    mesh.userData.placed = false;
+    buildGroup.add(mesh);
+    state.pieces.push({mesh, targetId:i, type:t.type, placed:false, tray:{x:tx, z:tz}});
+  });
+
+  // Centralizar a câmera levando em conta a bandeja também
+  controls.target.set(cx, cy, cz + 2);
+  controls.update();
+
+  state.ghostVisible = true;
+  updateGhostVisibility();
+  updateHUD();
+  showScreen(null);
+  showHUD(true);
+  toast(`Nível ${model.level} · ${model.name}`,'ok');
+}
+
+function clearGroup(g){
+  while(g.children.length){
+    const c = g.children.pop();
+    if(c.geometry && c.geometry !== groundGeo) {
+      // geometrias são cacheadas, não descartar
+    }
+    if(c.material && c.material.dispose && !matCache.has(c.material)) {
+      // materiais individuais de ghosts
+    }
+  }
+}
+
+function updateGhostVisibility(){
+  const show = state.ghostVisible && state.mode==='puzzle';
+  state.targets.forEach(t=>{ if(t.ghost) t.ghost.visible = show && !t.filled; });
+}
+
+// ============ SNAP SYSTEM ============
+function findSnapTarget(mesh){
+  const tx = mesh.position.x, tz = mesh.position.z;
+  let best = null, bestD = SNAP_DIST;
+  for(const t of state.targets){
+    if(t.filled) continue;
+    if(t.type !== mesh.userData.type) continue;
+    const dx = t.worldPos.x - tx;
+    const dz = t.worldPos.z - tz;
+    const d = Math.hypot(dx,dz);
+    if(d < bestD){ bestD = d; best = t; }
+  }
+  return best;
+}
+
+function highlightTarget(target){
+  state.targets.forEach(t=>{
+    if(!t.ghost) return;
+    if(t === target){
+      t.ghost.material.opacity = 0.55;
+      t.ghost.material.emissiveIntensity = 1.2;
+    } else if(!t.filled){
+      t.ghost.material.opacity = state.ghostVisible ? 0.16 : 0;
+      t.ghost.material.emissiveIntensity = 0.35;
+    }
+  });
+}
+
+function doSnap(mesh, target){
+  mesh.userData.placed = true;
+  mesh.position.copy(target.worldPos);
+  // Rotação correta?
+  const currentRot = ((mesh.userData.rot||0)%360+360)%360;
+  const targetRot = ((target.rot||0)%360+360)%360;
+  const sym = PIECE_DEFS[mesh.userData.type].w === PIECE_DEFS[mesh.userData.type].d;
+  const rotOk = sym || currentRot === targetRot ||
+                currentRot === (targetRot+180)%360 && sym;
+  // animação suave
+  mesh.userData.animFrom = mesh.position.clone();
+  mesh.userData.animFromRot = mesh.rotation.y;
+  mesh.userData.animTo = target.worldPos.clone();
+  mesh.userData.animToRot = THREE.MathUtils.degToRad(target.rot);
+  mesh.userData.animT = 0;
+  mesh.userData.snapping = true;
+
+  mesh.rotation.y = THREE.MathUtils.degToRad(target.rot);
+  mesh.userData.rot = target.rot;
+
+  target.filled = true;
+  if(target.ghost) target.ghost.visible = false;
+
+  // pontuação
+  state.placed++;
+  let pts = 100;
+  if(rotOk) pts += 50;
+  state.combo++;
+  if(state.combo >= 3) pts += state.combo * 8;
+  state.score += pts;
+
+  Audio.snap();
+  vibrate(28);
+  spawnParticles(target.worldPos, target.color);
+  updateHUD();
+  updateProgress();
+
+  if(state.placed >= state.total) finishLevel();
+}
+
+function spawnParticles(pos, color){
+  const count = 14;
+  const geo = new THREE.SphereGeometry(0.09, 6, 6);
+  for(let i=0;i<count;i++){
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color:new THREE.Color(color)}));
+    m.position.copy(pos).add(new THREE.Vector3(0, 0.3, 0));
+    const vx = (Math.random()-0.5)*0.22;
+    const vy = Math.random()*0.2 + 0.08;
+    const vz = (Math.random()-0.5)*0.22;
+    m.userData.v = new THREE.Vector3(vx,vy,vz);
+    m.userData.life = 1;
+    effectGroup.add(m);
+  }
+}
+
+function updateEffects(dt){
+  for(let i=effectGroup.children.length-1;i>=0;i--){
+    const p = effectGroup.children[i];
+    p.userData.v.y -= 0.9*dt;
+    p.position.addScaledVector(p.userData.v, dt*60/60);
+    p.position.x += p.userData.v.x*dt*6;
+    p.position.y += p.userData.v.y*dt*6;
+    p.position.z += p.userData.v.z*dt*6;
+    p.userData.life -= dt*1.4;
+    p.material.opacity = Math.max(0,p.userData.life);
+    p.material.transparent = true;
+    if(p.userData.life <= 0){
+      effectGroup.remove(p);
+    }
+  }
+}
+
+// ============ INTERAÇÃO COM PEÇAS ============
+const raycaster = new THREE.Raycaster();
+const pointerNDC = new THREE.Vector2();
+const dragPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+const intersectPoint = new THREE.Vector3();
+
+function getPointerNDC(e){
+  const rect = canvas.getBoundingClientRect();
+  pointerNDC.x = ((e.clientX - rect.left)/rect.width)*2 - 1;
+  pointerNDC.y = -((e.clientY - rect.top)/rect.height)*2 + 1;
+}
+
+function pickPieceAt(e){
+  getPointerNDC(e);
+  raycaster.setFromCamera(pointerNDC, camera);
+  const hits = raycaster.intersectObjects(buildGroup.children, false);
+  if(hits.length) return hits[0].object;
+  return null;
+}
+
+function onPointerDown(e){
+  if(state.mode === 'free') { /* modo livre tratado à parte */ }
+  if(e.button !== undefined && e.button !== 0 && e.pointerType === 'mouse') return;
+  const piece = pickPieceAt(e);
+  if(piece && !piece.userData.placed){
+    e.stopPropagation();
+    if(e.preventDefault) e.preventDefault();
+    controls.enabled = false;
+    state.dragging = true;
+    state.dragPointerId = e.pointerId;
+    state.selected = piece;
+    Audio.pick();
+    // realce
+    piece.material = pieceMaterial(piece.userData.baseColor, {emissive:piece.userData.baseColor, emissiveIntensity:0.35});
+    // planejar deslocamento
+    getPointerNDC(e);
+    raycaster.setFromCamera(pointerNDC, camera);
+    raycaster.ray.intersectPlane(dragPlane, intersectPoint);
+    state.dragStartWorld.copy(intersectPoint);
+    piece.userData.dragOffset = new THREE.Vector3(
+      piece.position.x - intersectPoint.x,
+      0,
+      piece.position.z - intersectPoint.z
+    );
+    try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
+  } else if(piece && piece.userData.placed){
+    // seleciona peça já montada (para remover)
+    state.selected = piece;
+    piece.material = pieceMaterial(piece.userData.baseColor, {emissive:'#F5A623', emissiveIntensity:0.5});
+    Audio.click();
+  }
+}
+
+function onPointerMove(e){
+  if(!state.dragging || e.pointerId !== state.dragPointerId) return;
+  getPointerNDC(e);
+  raycaster.setFromCamera(pointerNDC, camera);
+  raycaster.ray.intersectPlane(dragPlane, intersectPoint);
+  const piece = state.selected;
+  if(!piece) return;
+  piece.position.x = intersectPoint.x + piece.userData.dragOffset.x;
+  piece.position.z = intersectPoint.z + piece.userData.dragOffset.z;
+  piece.position.y = HOVER_Y;
+
+  const snap = findSnapTarget(piece);
+  highlightTarget(snap);
+  piece.userData.snapCandidate = snap;
+}
+
+function onPointerUp(e){
+  if(!state.dragging || e.pointerId !== state.dragPointerId) return;
+  const piece = state.selected;
+  state.dragging = false;
+  state.dragPointerId = null;
+  controls.enabled = true;
+  try{ canvas.releasePointerCapture(e.pointerId); }catch(_){}
+
+  if(!piece) return;
+  piece.material = pieceMaterial(piece.userData.baseColor);
+
+  const snap = piece.userData.snapCandidate;
+  if(snap){
+    doSnap(piece, snap);
+    state.selected = null;
+  } else {
+    // retorna para a bandeja
+    Audio.drop();
+    state.combo = 0;
+    if(Math.abs(piece.position.x - piece.userData.tray.x) > 0.5 ||
+       Math.abs(piece.position.z - piece.userData.tray.z) > 0.5){
+      state.errors++;
+      state.score = Math.max(0, state.score - 15);
+      updateHUD();
+    }
+    animateTo(piece, piece.userData.tray.x, 0.2, piece.userData.tray.z);
+    state.selected = null;
+    highlightTarget(null);
+  }
+  piece.userData.snapCandidate = null;
+}
+
+function animateTo(piece, x, y, z){
+  piece.userData.tweenFrom = piece.position.clone();
+  piece.userData.tweenTo = new THREE.Vector3(x,y,z);
+  piece.userData.tweenT = 0;
+  piece.userData.tweening = true;
+}
+
+function rotateSelected(){
+  const p = state.selected;
+  if(!p){ toast('Selecione uma peça primeiro'); return; }
+  if(p.userData.placed){
+    // não rotaciona peça já encaixada
+    return;
+  }
+  p.userData.rot = ((p.userData.rot||0) + 90) % 360;
+  Audio.rotate();
+  vibrate(15);
+  // tween visual
+  p.userData.rotTween = { from: p.rotation.y, to: THREE.MathUtils.degToRad(p.userData.rot), t:0 };
+}
+
+function vibrate(ms){
+  try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(_){}
+}
+
+// ============ AÇÕES HUD ============
+document.getElementById('btn-rotate').addEventListener('click', rotateSelected);
+document.getElementById('btn-center').addEventListener('click', ()=>{
+  const t = state.model ? controls.target.clone() : new THREE.Vector3(3,3,3);
+  controls.target.copy(t);
+  controls.update();
+});
+document.getElementById('btn-iso').addEventListener('click', ()=>{
+  const t = controls.target;
+  const d = camera.position.distanceTo(t);
+  camera.position.set(t.x + d*0.55, t.y + d*0.75, t.z + d*0.85);
+  controls.update();
+});
+document.getElementById('btn-up').addEventListener('click', ()=>{ if(state.selected && !state.selected.userData.placed) state.selected.position.y += 0.5; });
+document.getElementById('btn-down').addEventListener('click', ()=>{ if(state.selected && !state.selected.userData.placed) state.selected.position.y = Math.max(0.3, state.selected.position.y - 0.5); });
+document.getElementById('btn-guide').addEventListener('click', ()=>{
+  state.ghostVisible = !state.ghostVisible;
+  updateGhostVisibility();
+  toast(state.ghostVisible ? 'Guias visíveis' : 'Guias ocultas');
+});
+document.getElementById('btn-remove').addEventListener('click', ()=>{
+  const p = state.selected;
+  if(!p || !p.userData.placed){ toast('Selecione uma peça montada','err'); return; }
+  // desmonta
+  const target = state.targets.find(t=>t.pieceId === p.userData.targetId);
+  if(target){
+    target.filled = false;
+    if(target.ghost){ target.ghost.visible = state.ghostVisible; }
+    state.placed--;
+    state.score = Math.max(0, state.score - 40);
+    updateHUD(); updateProgress();
+  }
+  p.userData.placed = false;
+  p.userData.rot = 0;
+  p.rotation.y = 0;
+  animateTo(p, p.userData.tray.x, 0.2, p.userData.tray.z);
+  p.material = pieceMaterial(p.userData.baseColor);
+  Audio.remove();
+  state.selected = null;
+});
+
+document.getElementById('btn-menu').addEventListener('click', ()=>{
+  Audio.click();
+  showScreen('screen-pause');
+});
+
+// ============ PROGRESSO / HUD ============
+function updateHUD(){
+  document.getElementById('ui-placed').textContent = state.placed;
+  document.getElementById('ui-total').textContent = state.total;
+  document.getElementById('ui-score').textContent = state.score.toLocaleString('pt-BR');
+}
+function updateProgress(){
+  const pct = state.total ? (state.placed/state.total)*100 : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+function updateTimer(){
+  const s = Math.floor(state.elapsed);
+  const mm = String(Math.floor(s/60)).padStart(2,'0');
+  const ss = String(s%60).padStart(2,'0');
+  document.getElementById('ui-time').textContent = `${mm}:${ss}`;
+}
+function showHUD(v){
+  document.getElementById('hud-top').classList.toggle('hidden', !v);
+  document.getElementById('hud-bottom').classList.toggle('hidden', !v);
+}
+
+// ============ FINAL DE NÍVEL ============
+function finishLevel(){
+  state.running = false;
+  Audio.win();
+  vibrate([40,60,40]);
+  const timeBonus = Math.max(0, Math.floor((state.model.timeTarget - state.elapsed) * 5));
+  const acc = state.total ? Math.max(0, Math.round((1 - state.errors/(state.total*2))*100)) : 100;
+  const final = state.score + timeBonus + Math.round(acc * 10);
+  state.score = final;
+
+  // estrelas
+  let medal = '🥉', rank = 'Bronze';
+  if(final >= 2000){ medal='🥈'; rank='Prata'; }
+  if(final >= 3500){ medal='🥇'; rank='Ouro'; }
+  if(final >= 5000){ medal='👑'; rank='Mestre'; }
+
+  document.getElementById('win-medal').textContent = medal;
+  document.getElementById('win-name').textContent = `${state.model.name} · ${rank}`;
+  document.getElementById('win-pieces').textContent = `${state.placed}/${state.total}`;
+  document.getElementById('win-time').textContent = document.getElementById('ui-time').textContent;
+  document.getElementById('win-acc').textContent = acc + '%';
+  document.getElementById('win-score').textContent = final.toLocaleString('pt-BR');
+
+  // salvar progresso
+  SaveSystem.unlock(state.levelKey);
+  SaveSystem.setBest(state.levelKey, final);
+
+  // animação de câmera: afasta
+  const t = controls.target.clone();
+  const dir = camera.position.clone().sub(t).normalize();
+  const finalPos = t.clone().addScaledVector(dir, 32);
+  tweenCamera(camera.position.clone(), finalPos, 1.2);
+
+  // confetes
+  for(let i=0;i<40;i++){
+    spawnParticles(
+      new THREE.Vector3(t.x + (Math.random()-0.5)*8, t.y + 2 + Math.random()*4, t.z + (Math.random()-0.5)*8),
+      PALETTE_COLORS[i % PALETTE_COLORS.length]
+    );
+  }
+
+  setTimeout(()=>{
+    showHUD(false);
+    showScreen('screen-complete');
+  }, 1500);
+}
+
+const camTween = {active:false, from:null, to:null, t:0};
+function tweenCamera(from, to, dur){
+  camTween.from = from.clone();
+  camTween.to = to.clone();
+  camTween.dur = dur;
+  camTween.t = 0;
+  camTween.active = true;
+}
+
+// ============ LOOP DE RENDERIZAÇÃO ============
+let lastT = performance.now();
+function animate(){
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min(0.05, (now-lastT)/1000);
+  lastT = now;
+
+  if(state.running){
+    state.elapsed = (now - state.startTime)/1000;
+    updateTimer();
+    // penalidade de tempo (muito leve)
+    if(Math.floor(state.elapsed) % 30 === 0 && state.placed > 0){
+      // sem penalidade direta por padrão
+    }
+  }
+
+  // Animações de peças
+  state.pieces.forEach(p=>{
+    const m = p.mesh;
+    if(m.userData.tweening){
+      m.userData.tweenT += dt * 3.5;
+      const t = Math.min(1, m.userData.tweenT);
+      const e = 1 - Math.pow(1-t, 3);
+      m.position.lerpVectors(m.userData.tweenFrom, m.userData.tweenTo, e);
+      if(t>=1) m.userData.tweening = false;
+    }
+    if(m.userData.rotTween){
+      m.userData.rotTween.t += dt*5;
+      const t = Math.min(1, m.userData.rotTween.t);
+      const e = 1 - Math.pow(1-t, 3);
+      m.rotation.y = m.userData.rotTween.from + (m.userData.rotTween.to - m.userData.rotTween.from)*e;
+      if(t>=1) m.userData.rotTween = null;
+    }
+  });
+
+  updateEffects(dt);
+
+  // câmera tween
+  if(camTween.active){
+    camTween.t += dt / camTween.dur;
+    const t = Math.min(1, camTween.t);
+    const e = 1 - Math.pow(1-t, 3);
+    camera.position.lerpVectors(camTween.from, camTween.to, e);
+    if(t>=1) camTween.active = false;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', ()=>setTimeout(resize,200));
+resize();
+
+// ============ LISTENERS ============
+canvas.addEventListener('pointerdown', onPointerDown, true);
+window.addEventListener('pointermove', onPointerMove);
+window.addEventListener('pointerup', onPointerUp);
+window.addEventListener('pointercancel', onPointerUp);
+window.addEventListener('keydown', (e)=>{
+  if(e.key === 'r' || e.key === 'R') rotateSelected();
+  if(e.key === 'Escape'){ if(state.running) showScreen('screen-pause'); }
+});
+
+// ============ SISTEMA DE UI ============
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+  if(id) document.getElementById(id).classList.remove('hidden');
+  state.screen = id || 'game';
+}
+function toast(msg, kind){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (kind ? ' ' + kind : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.className = ''; }, 2200);
+}
+
+// ============ SISTEMA DE SAVE ============
+const SaveSystem = (()=>{
+  const KEY = 'apbuild3d:v1';
+  function read(){
+    try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(_){ return {}; }
+  }
+  function write(data){
+    try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(_){}
+  }
+  return {
+    unlock(levelKey){
+      const d = read();
+      d.unlocked = d.unlocked || {};
+      d.unlocked[levelKey] = true;
+      write(d);
+    },
+    isUnlocked(levelKey){
+      const d = read();
+      if(levelKey === LEVEL_ORDER[0]) return true;
+      return !!(d.unlocked && d.unlocked[levelKey]);
+    },
+    setBest(levelKey, score){
+      const d = read();
+      d.best = d.best || {};
+      if(!d.best[levelKey] || d.best[levelKey] < score) d.best[levelKey] = score;
+      write(d);
+    },
+    getBest(levelKey){
+      const d = read();
+      return (d.best && d.best[levelKey]) || 0;
+    },
+    saveProject(data){
+      const d = read();
+      d.project = data;
+      write(d);
+    },
+    loadProject(){
+      const d = read();
+      return d.project || null;
+    },
+    clear(){ localStorage.removeItem(KEY); }
+  };
+})();
+
+// ============ MENUS ============
+function buildLevelsGrid(){
+  const grid = document.getElementById('levels-grid');
+  grid.innerHTML = '';
+  LEVEL_ORDER.forEach((key, i)=>{
+    const m = MODELS[key];
+    const unlocked = SaveSystem.isUnlocked(key);
+    const best = SaveSystem.getBest(key);
+    const card = document.createElement('div');
+    card.className = 'level-card' + (unlocked ? '' : ' locked');
+    card.innerHTML = `
+      <div class="df">Nível ${m.level} · ${m.difficulty}</div>
+      <div class="nm">${m.name}</div>
+      <div class="pc">${m.pieces.length} peças${best ? ' · ⭐ ' + best : ''}</div>
+    `;
+    card.addEventListener('click', ()=>{
+      Audio.click();
+      loadModel(key);
+    });
+    grid.appendChild(card);
+  });
+}
+
+// Menu principal
+document.getElementById('m-play').addEventListener('click', ()=>{
+  Audio.click();
+  buildLevelsGrid();
+  showScreen('screen-levels');
+});
+document.getElementById('m-free').addEventListener('click', ()=>{
+  Audio.click(); startFreeBuild();
+});
+document.getElementById('m-projects').addEventListener('click', ()=>{
+  Audio.click(); showScreen('screen-projects');
+});
+document.getElementById('m-tutorial').addEventListener('click', ()=>{ Audio.click(); showScreen('screen-tutorial'); });
+document.getElementById('m-settings').addEventListener('click', ()=>{ Audio.click(); updateSettingsUI(); showScreen('screen-settings'); });
+
+document.getElementById('lv-back').addEventListener('click', ()=>{ Audio.click(); showScreen('screen-menu'); });
+document.getElementById('tu-back').addEventListener('click', ()=>{ Audio.click(); showScreen('screen-menu'); });
+document.getElementById('st-back').addEventListener('click', ()=>{ Audio.click(); showScreen('screen-menu'); });
+document.getElementById('pj-back').addEventListener('click', ()=>{ Audio.click(); showScreen('screen-menu'); });
+
+// Configurações
+function updateSettingsUI(){
+  document.getElementById('st-sound').textContent = '🔊 SOM: ' + (state.soundOn ? 'LIGADO' : 'DESLIGADO');
+  document.getElementById('st-physics').textContent = '⚛ FÍSICA: ' + (state.physicsMode === 'puzzle' ? 'PUZZLE' : 'REALISTA');
+  document.getElementById('st-ghost').textContent = '👻 GUIAS: ' + (state.ghostVisible ? 'VISÍVEIS' : 'OCULTAS');
+}
+document.getElementById('st-sound').addEventListener('click', ()=>{
+  state.soundOn = !state.soundOn; updateSettingsUI(); Audio.click();
+});
+document.getElementById('st-physics').addEventListener('click', ()=>{
+  state.physicsMode = state.physicsMode === 'puzzle' ? 'physics' : 'puzzle';
+  updateSettingsUI();
+});
+document.getElementById('st-ghost').addEventListener('click', ()=>{
+  state.ghostVisible = !state.ghostVisible;
+  updateGhostVisibility();
+  updateSettingsUI();
+});
+document.getElementById('st-reset').addEventListener('click', ()=>{
+  if(confirm('Apagar todo o progresso salvo?')){ SaveSystem.clear(); toast('Progresso apagado'); }
+});
+
+// Pausa
+document.getElementById('pa-resume').addEventListener('click', ()=>{ Audio.click(); showScreen(null); });
+document.getElementById('pa-restart').addEventListener('click', ()=>{
+  Audio.click();
+  if(state.levelKey) loadModel(state.levelKey);
+});
+document.getElementById('pa-levels').addEventListener('click', ()=>{
+  Audio.click(); buildLevelsGrid(); showScreen('screen-levels');
+});
+document.getElementById('pa-save').addEventListener('click', ()=>{
+  if(state.levelKey){
+    SaveSystem.unlock(state.levelKey);
+    toast('Progresso salvo','ok');
+  }
+});
+document.getElementById('pa-menu').addEventListener('click', ()=>{ Audio.click(); goMenu(); });
+
+// Vitória
+document.getElementById('win-next').addEventListener('click', ()=>{
+  Audio.click();
+  const i = LEVEL_ORDER.indexOf(state.levelKey);
+  const next = LEVEL_ORDER[i+1];
+  if(next){ loadModel(next); }
+  else { toast('Você completou todos os níveis!'); buildLevelsGrid(); showScreen('screen-levels'); }
+});
+document.getElementById('win-retry').addEventListener('click', ()=>{
+  Audio.click();
+  if(state.levelKey) loadModel(state.levelKey);
+});
+document.getElementById('win-menu').addEventListener('click', ()=>{ Audio.click(); goMenu(); });
+
+function goMenu(){
+  state.running = false;
+  showHUD(false);
+  showScreen('screen-menu');
+  clearGroup(buildGroup);
+  clearGroup(ghostGroup);
+  state.targets = []; state.pieces = [];
+}
+
+// Projetos
+document.getElementById('pj-new').addEventListener('click', ()=>{ Audio.click(); startFreeBuild(); });
+document.getElementById('pj-load').addEventListener('click', ()=>{
+  Audio.click();
+  const p = SaveSystem.loadProject();
+  if(!p){ toast('Nenhum projeto salvo','err'); return; }
+  startFreeBuild(p);
+});
+document.getElementById('pj-export').addEventListener('click', ()=>{
+  const p = SaveSystem.loadProject();
+  if(!p){ toast('Nada para exportar','err'); return; }
+  const blob = new Blob([JSON.stringify(p,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'apbuild3d-projeto.json'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Projeto exportado','ok');
+});
+document.getElementById('pj-import').addEventListener('click', ()=>{
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json,application/json';
+  inp.onchange = (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      try{
+        const data = JSON.parse(ev.target.result);
+        if(!data || !Array.isArray(data.pieces)) throw new Error('formato inválido');
+        SaveSystem.saveProject(data);
+        toast('Projeto importado','ok');
+      }catch(err){ toast('JSON inválido','err'); }
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+});
+
+// ============ MODO LIVRE ============
+let freeBuildState = { active:false, currentType:'2x4', currentColor:'#1565C0', pieces:[] };
+
+function startFreeBuild(saved){
+  state.mode = 'free';
+  state.targets = []; state.pieces = [];
+  state.running = false;
+  state.placed = 0; state.total = 0;
+  clearGroup(buildGroup); clearGroup(ghostGroup);
+  showHUD(true);
+  document.getElementById('chip-pieces').innerHTML = '🧱 <b id="ui-placed">0</b> peças';
+  document.getElementById('chip-score').innerHTML = '🎨 <b>LIVRE</b>';
+  document.getElementById('ui-time').textContent = '∞';
+  showScreen(null);
+
+  if(saved && Array.isArray(saved.pieces)){
+    saved.pieces.forEach(p=>{
+      if(!PIECE_DEFS[p.type]) return;
+      const mesh = makePiece(p.type, p.color || '#1565C0');
+      const {w,d} = rotatedDims(p.type, p.rot||0);
+      mesh.position.set((p.x + w/2)*GRID, (p.y||0)*SUB, (p.z + d/2)*GRID);
+      mesh.rotation.y = THREE.MathUtils.degToRad(p.rot||0);
+      mesh.userData.rot = p.rot||0;
+      mesh.userData.placed = true;
+      buildGroup.add(mesh);
+      freeBuildState.pieces.push({mesh, type:p.type, color:p.color, x:p.x, y:p.y, z:p.z, rot:p.rot||0});
+    });
+  }
+  freeBuildState.active = true;
+  controls.target.set(3,2,3);
+  camera.position.set(14,12,16);
+  controls.update();
+  toast('Modo Livre · Toque ☰ para menu');
+}
+
+// Reposiciona botão do menu para o modo livre
+const _menuBtn = document.getElementById('btn-menu');
+_menuBtn.addEventListener('click', ()=>{
+  if(state.mode === 'free'){
+    // Salvar e sair
+    const data = {
+      name: 'Meu Projeto',
+      pieces: freeBuildState.pieces.map(p=>{
+        const {w,d} = rotatedDims(p.type, p.rot||0);
+        return {
+          type: p.type,
+          color: p.mesh.userData.baseColor,
+          x: Math.round(p.mesh.position.x - w/2),
+          y: Math.round(p.mesh.position.y / SUB),
+          z: Math.round(p.mesh.position.z - d/2),
+          rot: p.mesh.userData.rot||0
+        };
+      })
+    };
+    SaveSystem.saveProject(data);
+    toast('Projeto salvo','ok');
+    freeBuildState.active = false;
+    goMenu();
+  }
+});
+
+// ============ VERIFICAÇÃO DE CAPACIDADES ============
+function boot(){
+  // Esconder loading após iniciar render
+  setTimeout(()=>{ document.getElementById('loading').style.display = 'none'; }, 400);
+  showScreen('screen-menu');
+  // registra service worker
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  }
+}
+
+animate();
+boot();
+
+// Expor para o editor interno (opcional)
+window.APBUILD = { state, MODELS, PIECE_DEFS, SaveSystem, loadModel };
+
+</script>
+</body>
+</html>
