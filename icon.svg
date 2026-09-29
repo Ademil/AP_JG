@@ -11,12 +11,10 @@
     </linearGradient>
   </defs>
   <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <!-- Bloco 3D estilizado -->
   <g transform="translate(256,300)">
     <polygon points="0,-90 90,-45 0,0 -90,-45" fill="#4A90E2" opacity="0.9"/>
     <polygon points="0,0 90,-45 90,45 0,90" fill="#1565C0"/>
     <polygon points="0,0 -90,-45 -90,45 0,90" fill="#0D47A1"/>
-    <!-- studs -->
     <ellipse cx="-30" cy="-72" rx="14" ry="7" fill="#64B5F6" opacity="0.55"/>
     <ellipse cx="30" cy="-72" rx="14" ry="7" fill="#64B5F6" opacity="0.55"/>
   </g>
